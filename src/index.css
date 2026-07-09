@@ -1,0 +1,77 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: #080a11;
+    color: #f3f4f6;
+    overflow-x: hidden;
+    margin: 0;
+  }
+}
+
+/* Premium Animations */
+@keyframes rotateGlow {
+  0% { transform: translate(-50%, -50%) rotate(0deg); }
+  100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes tilting {
+  0%, 100% { transform: skewX(-1deg); }
+  20% { transform: skewX(2deg) skewY(10deg); }
+  60% { transform: skewX(-2deg); }
+}
+
+@keyframes moving {
+  0%, 100% { transform: skewX(-0.5deg); }
+  20% { transform: skewX(1deg); }
+  60% { transform: skewX(-1deg); }
+}
+
+@keyframes widthAnim {
+  0%, 100% { transform: scale(0.95, 1); }
+  30% { transform: scale(1, 1); }
+  60% { transform: scale(0.9, 1); }
+}
+
+/* Custom Scrollbars */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Glassmorphism Styles */
+.premium-glow-text {
+  background: linear-gradient(to right, #22d3ee, #6366f1, #ec4899);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.motionsite-card-shine {
+  position: relative;
+}
+.motionsite-card-shine::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, transparent 50%, transparent 100%);
+  pointer-events: none;
+}

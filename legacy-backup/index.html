@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Classic Stopwatch with Bubble Sidebar</title>
+<style>
+    /* --- EXACT OLD DESIGN (PURE CSS VIBE) --- */
+    html, body {
+        padding: 0;
+        margin: 0;
+        background-color: #0F0F0F;
+        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    }
+    
+    *, *::before, *::after {
+        box-sizing: border-box;
+    }
+
+    .container {
+        font-weight: 300;
+        position: absolute;
+        top: 25%; /* Upar se hamesha fix rahega */
+        left: 50%;
+        transform: translateX(-50%); /* Sirf left-right se center mein rahega */
+        width: 90vw;
+        min-width: 300px;
+        max-width: 400px;
+        text-align: center;
+    }
+
+    /* Main Display */
+    time {
+        font-size: 68px;
+        height: 1em;
+        line-height: 1em;
+        display: inline-block;
+        margin-bottom: 60px;
+        color: #fff;
+        font-weight: 100;
+        letter-spacing: 2px;
+        font-variant-numeric: tabular-nums;
+    }
+
+    /* Exact Original Controls Styling */
+    .controls {
+        position: relative;
+        height: 80px;
+        margin-bottom: 20px;
+    }
+
+    .controls button {
+        cursor: pointer;
+        font-size: 16px;
+        border: 2px solid #353535;
+        background-color: #353535;
+        box-shadow: inset 0 0 0 2px #0F0F0F;
+        color: #ccc;
+        width: 80px;
+        height: 80px;
+        border-radius: 100%;
+        text-align: center;
+        line-height: 76px;
+        position: absolute;
+        top: 0;
+        outline: none;
+        padding: 0;
+    }
+
+    .controls button:active { opacity: 0.7; }
+    .controls button:disabled { opacity: 0.5; cursor: default; }
+
+    #startBtn, #stopBtn { right: 0; }
+    #lapBtn, #resetBtn { left: 0; }
+
+    #startBtn { background-color: #182E1C; border-color: #182E1C; color: #42CC57; }
+    #stopBtn { background-color: #351614; border-color: #351614; color: #FF352C; }
+
+    /* Exact Original Laps Styling */
+    .laps {
+        list-style: none;
+        margin: 0;
+        padding-left: 0;
+        border-top: 1px solid #333; 
+        font-size: 16px;
+        max-height: 55vh; 
+        overflow-y: auto;
+    }
+
+    .laps li {
+        color: #fff;
+        position: relative;
+        border-bottom: 1px solid #333; 
+        height: 3em;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 10px;
+    }
+
+    .lap-name { color: #666; }
+    .lap-time { color: #fff; font-size: 18px; font-weight: 300; }
+
+    .laps::-webkit-scrollbar { width: 4px; }
+    .laps::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+
+
+    /* --- NEW BUBBLE SIDEBAR DESIGN --- */
+    /* ═══════════════════════════════════════════
+       PREMIUM NEON GLOWING SIDEBAR (FIXED GLOW & STABILITY)
+    ═══════════════════════════════════════════ */
+    .bubble-sidebar {
+        position: fixed;
+        top: 20px; 
+        left: 20px; 
+        height: calc(100vh - 40px); 
+        width: 65px; 
+        border-radius: 25px; 
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+        transition: width 0.4s cubic-bezier(0.25, 1, 0.5, 1); 
+        overflow: hidden; /* Light ko bahar nikalne se rokna */
+        z-index: 100;
+        display: flex; 
+        flex-direction: column; 
+        align-items: center; 
+        padding: 20px 0;
+    }
+
+    .bubble-sidebar:hover { 
+        width: 250px;
+    }
+
+    /* 1. Ghoomne Wali Asli Neon Light (Sabse peechhe) */
+    .bubble-sidebar::before {
+        content: '';
+        position: absolute;
+        top: 50%; left: 50%;
+        width: 200vh; /* Bada size taaki failne par light na kate */
+        height: 200vh;
+        /* Yahan mene colors ko bright kiya hai taaki zeher lage */
+        background: conic-gradient(
+            transparent, 
+            #ff00aa 15%, 
+            transparent 30%, 
+            #00e5ff 65%, 
+            transparent 85%
+        );
+        transform: translate(-50%, -50%);
+        animation: rotateGlow 3.5s linear infinite;
+        /* YAHI THA JADOO JO MISSING THA - BLUR & BRIGHTNESS */
+        filter: blur(15px) brightness(1.5);
+        z-index: -2;
+    }
+
+    /* 2. Andar ka Premium Kaanch */
+    .bubble-sidebar::after {
+        content: '';
+        position: absolute;
+        inset: 4px; /* Pehle 3px tha, ab thoda aur jagah di taaki light dikhe */
+        background: rgba(15, 15, 20, 0.9); /* Dark glass */
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-radius: 21px; 
+        z-index: -1;
+    }
+
+    /* Light ka gol-gol ghoomna */
+    @keyframes rotateGlow {
+        100% { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+
+    /* 3. Sabhi buttons aur icons ko light aur kaanch ke upar lana */
+    .bubble-sidebar > * {
+        position: relative;
+        z-index: 1;
+    }
+
+    .centered-buttons {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+        width: 100%;
+        margin-top: 20px; /* Ye theek kiya */
+        padding: 0 10px; /* Ye naya add kiya taaki buttons stable rahein */
+    }
+
+    .bubble-btn {
+        display: flex;
+        align-items: center;
+        width: 45px; 
+        height: 45px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.05);
+        box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.1), 0 5px 15px rgba(0,0,0,0.4);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+        overflow: hidden;
+    }
+
+    .bubble-sidebar:hover .bubble-btn {
+        width: 100%; 
+        border-radius: 15px;
+    }
+
+    .bubble-btn:hover {
+        background: rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        transform: translateY(-2px); 
+    }
+
+    .bubble-icon {
+        min-width: 24px;
+        height: 24px;
+        color: #888;
+        margin-left: 10px; 
+        transition: color 0.3s ease;
+    }
+
+    .bubble-btn:hover .bubble-icon { color: #fff; }
+
+    .bubble-text {
+        color: #fff;
+        font-size: 16px;
+        margin-left: 15px;
+        opacity: 0;
+        white-space: nowrap;
+        transition: opacity 0.3s ease;
+    }
+
+    .bubble-sidebar:hover .bubble-text {
+        opacity: 1;
+        transition-delay: 0.1s; 
+    }
+    /* ═══════════════════════════════════════════
+       3D METALLIC SUBJECT BUTTONS (TERI CSS)
+    ═══════════════════════════════════════════ */
+    .subject-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        margin-bottom: 30px;
+    }
+
+    .button {
+      all: unset;
+      cursor: pointer;
+      -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+      position: relative;
+      border-radius: 100em;
+      background-color: rgba(0, 0, 0, 0.75);
+      box-shadow: -0.15em -0.15em 0.15em -0.075em rgba(5, 5, 5, 0.25), 0.0375em 0.0375em 0.0675em 0 rgba(5, 5, 5, 0.1);
+      font-size: 14px; /* Button ka size control karne ke liye */
+    }
+
+    .button::after {
+      content: ""; position: absolute; z-index: 0;
+      width: calc(100% + 0.3em); height: calc(100% + 0.3em);
+      top: -0.15em; left: -0.15em; border-radius: inherit;
+      background: linear-gradient(-135deg, rgba(5, 5, 5, 0.5), transparent 20%, transparent 100%);
+      filter: blur(0.0125em); opacity: 0.25; mix-blend-mode: multiply;
+    }
+
+    .button .button-outer {
+      position: relative; z-index: 1; border-radius: inherit;
+      transition: box-shadow 300ms ease; will-change: box-shadow;
+      box-shadow: 0 0.05em 0.05em -0.01em rgba(5, 5, 5, 1), 0 0.01em 0.01em -0.01em rgba(5, 5, 5, 0.5), 0.15em 0.3em 0.1em -0.01em rgba(5, 5, 5, 0.25);
+    }
+
+    .button:hover .button-outer, .button.active .button-outer {
+      box-shadow: 0 0 0 0 rgba(5, 5, 5, 1), 0 0 0 0 rgba(5, 5, 5, 0.5), 0 0 0 0 rgba(5, 5, 5, 0.25);
+    }
+
+    .button-inner {
+      --inset: 0.035em; position: relative; z-index: 1; border-radius: inherit;
+      padding: 0.8em 1.2em;
+      background-image: linear-gradient(135deg, rgba(230, 230, 230, 1), rgba(180, 180, 180, 1));
+      transition: box-shadow 300ms ease, clip-path 250ms ease, background-image 250ms ease, transform 250ms ease;
+      will-change: box-shadow, clip-path, background-image, transform;
+      overflow: clip;
+      clip-path: inset(0 0 0 0 round 100em);
+      box-shadow: 0 0 0 0 inset rgba(5, 5, 5, 0.1), -0.05em -0.05em 0.05em 0 inset rgba(5, 5, 5, 0.25), 0 0 0 0 inset rgba(5, 5, 5, 0.1), 0 0 0.05em 0.2em inset rgba(255, 255, 255, 0.25), 0.025em 0.05em 0.1em 0 inset rgba(255, 255, 255, 1), 0.12em 0.12em 0.12em inset rgba(255, 255, 255, 0.25), -0.075em -0.25em 0.25em 0.1em inset rgba(5, 5, 5, 0.25);
+    }
+
+    .button:hover .button-inner, .button.active .button-inner {
+      clip-path: inset(clamp(1px, 0.0625em, 2px) clamp(1px, 0.0625em, 2px) clamp(1px, 0.0625em, 2px) clamp(1px, 0.0625em, 2px) round 100em);
+      box-shadow: 0.1em 0.15em 0.05em 0 inset rgba(5, 5, 5, 0.75), -0.025em -0.03em 0.05em 0.025em inset rgba(5, 5, 5, 0.5), 0.25em 0.25em 0.2em 0 inset rgba(5, 5, 5, 0.5), 0 0 0.05em 0.5em inset rgba(255, 255, 255, 0.15), 0 0 0 0 inset rgba(255, 255, 255, 1), 0.12em 0.12em 0.12em inset rgba(255, 255, 255, 0.25), -0.075em -0.12em 0.2em 0.1em inset rgba(5, 5, 5, 0.25);
+    }
+
+    .button .button-inner span {
+      position: relative; z-index: 4;
+      font-family: "Helvetica", sans-serif; letter-spacing: 0.5px; font-weight: bold;
+      color: rgba(0, 0, 0, 0);
+      background-image: linear-gradient(135deg, rgba(25, 25, 25, 1), rgba(75, 75, 75, 1));
+      -webkit-background-clip: text; background-clip: text;
+      transition: transform 250ms ease; display: block; will-change: transform;
+      text-shadow: rgba(0, 0, 0, 0.1) 0 0 0.1em;
+      -webkit-user-select: none; user-select: none;
+    }
+
+    .button:hover .button-inner span, .button.active .button-inner span {
+      transform: scale(0.975);
+    }
+
+    /* Jab button Active (Pressed) ho, toh uske text ka color change hoga */
+    .button.active[data-subject="Physics"] .button-inner span { background-image: linear-gradient(135deg, #4DA8FF, #0055ff); }
+    .button.active[data-subject="Chemistry"] .button-inner span { background-image: linear-gradient(135deg, #3DFF8F, #009944); }
+    .button.active[data-subject="Maths"] .button-inner span { background-image: linear-gradient(135deg, #FF7B4D, #cc2200); }
+    /* ═══════════════════════════════════════════
+       🔥 STREAK FIRE & GLOW BOX CSS 🔥
+    ═══════════════════════════════════════════ */
+    .streak-glow-box {
+        position: relative;
+        width: 100%;
+        max-width: 320px;
+        height: 90px;
+        margin: 0 auto 30px auto;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+    
+    /* Ghoomne wali Light */
+    .streak-glow-box::before {
+        content: ''; position: absolute; top: 50%; left: 50%;
+        width: 250%; height: 250%;
+        background: conic-gradient(transparent, #ff00aa 15%, transparent 30%, #00e5ff 65%, transparent 85%);
+        transform: translate(-50%, -50%);
+        animation: rotateGlow 3.5s linear infinite;
+        filter: blur(15px) brightness(1.5);
+        z-index: -2;
+    }
+    
+    /* Andar ka dark sheesha */
+    .streak-glow-box::after {
+        content: ''; position: absolute; inset: 4px;
+        background: rgba(15, 15, 20, 0.9);
+        backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+        border-radius: 11px; z-index: -1;
+    }
+
+    .streak-content {
+        position: relative; z-index: 1; display: flex; 
+        justify-content: space-between; align-items: center;
+        height: 100%; padding: 0 25px;
+    }
+
+    .streak-text {
+        color: #888; font-size: 16px; text-align: left; 
+        font-family: "DM Mono", monospace, sans-serif; text-transform: uppercase;
+    }
+    
+    #streakCountDisplay {
+        font-size: 32px; font-weight: bold; color: #FFB84D; 
+        text-shadow: 0 0 10px rgba(255, 184, 77, 0.5);
+    }
+
+    /* Asli Aag (Teri CSS ko Box mein fit kiya) */
+    .fire-container {
+        width: 80px; height: 80px; position: relative;
+    }
+    .fire__wrapper {
+        width: 100%; height: 100%; transform-origin: center bottom;
+        animation: tilting 4s infinite;
+    }
+    .fire {
+        width: 100%; height: 100%; background-size: 100% 100%;
+        animation: widthAnim 5s infinite;
+    }
+    .fire__center {
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        background-size: 100% 100%; transform-origin: center bottom;
+        animation: moving 2.5s infinite;
+    }
+
+    @keyframes moving { 0%, 100% { transform: skewX(-0.5deg); } 20% { transform: skewX(1deg); } 60% { transform: skewX(-1deg); } }
+    @keyframes tilting { 0%, 100% { transform: skewX(-1deg); } 20% { transform: skewX(2deg) skewY(10deg); } 60% { transform: skewX(-2deg); } }
+    @keyframes widthAnim { 0%, 100% { transform: scale(0.95, 1); } 30% { transform: scale(1, 1); } 60% { transform: scale(0.9, 1); } }
+
+/* ═══════════════════════════════════════════
+       🔥 TOP RIGHT STREAK WIDGET & HOVER POP-UP 🔥
+    ═══════════════════════════════════════════ */
+    .streak-widget-container { position: fixed; top: 30px; right: 30px; width: 140px; height: 60px; z-index: 1000; cursor: pointer; }
+
+    /* POPUP REPLACE LOGIC */
+    .widget-simple, .streak-popover-large { transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s ease; }
+    .widget-simple { position: absolute; inset: 0; display: flex; align-items: center; padding: 0 15px; opacity: 1; visibility: visible; }
+    
+    .streak-popover-large {
+        position: absolute; top: 0; right: 0; width: 360px; background: rgba(20, 20, 25, 0.98);
+        backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 25px; 
+        box-shadow: 0 10px 40px rgba(0,0,0,0.9); z-index: 2000; display: flex; flex-direction: column; gap: 25px;
+        opacity: 0; visibility: hidden; transform: translateY(10px); cursor: default;
+    }
+
+    .streak-widget-container:hover .widget-simple { opacity: 0; visibility: hidden; transform: scale(0.95); }
+    .streak-widget-container:hover .streak-popover-large { opacity: 1; visibility: visible; transform: translateY(0); }
+
+    .streak-glass-box { position: absolute; inset: 0; border-radius: 15px; overflow: hidden; box-shadow: 0 5px 25px rgba(0,0,0,0.5); }
+    .streak-glass-box::before {
+        content: ''; position: absolute; top: 50%; left: 50%; width: 250%; height: 250%;
+        background: conic-gradient(transparent, #ff00aa 15%, transparent 30%, #00e5ff 65%, transparent 85%);
+        transform: translate(-50%, -50%); animation: rotateGlow 3.5s linear infinite; filter: blur(12px) brightness(1.5); z-index: -2;
+    }
+    .streak-glass-box::after { content: ''; position: absolute; inset: 3px; background: rgba(15, 15, 20, 0.9); backdrop-filter: blur(20px); border-radius: 12px; z-index: -1; }
+
+    .streak-info { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: flex-start; margin-left: 10px; }
+    .streak-label { font-size: 11px; color: #888; letter-spacing: 2px; text-transform: uppercase; }
+    .streak-count { font-size: 26px; font-weight: bold; color: #FFB84D; text-shadow: 0 0 10px rgba(255, 184, 77, 0.4); line-height: 1; }
+
+    .fire-container-small { position: absolute; right: -5px; bottom: -5px; width: 80px; height: 80px; transform: scale(0.75); transform-origin: bottom right; z-index: 2; pointer-events: none; }
+    #dynamicFire { transform-origin: bottom center; transition: transform 1s ease-out; transform: scaleY(0.85); }
+    
+    .popover-header { display: flex; align-items: center; gap: 30px; background: rgba(255, 184, 77, 0.05); padding: 20px 25px; border-radius: 12px; border: 1px solid rgba(255, 184, 77, 0.1); position: relative; overflow: hidden; }
+    .popover-fire-circle { position: relative; font-size: 55px; font-weight: 800; background: linear-gradient(180deg, #FFE0A3, #FFB84D); -webkit-background-clip: text; color: transparent; line-height: 1; text-shadow: 0 0 25px rgba(255, 184, 77, 0.3); font-family: var(--font-display); }
+    .popover-header-text h3 { margin: 0 0 5px 0; font-size: 18px; color: #fff; font-family: var(--font-display); }
+    .popover-header-text p { margin: 0; font-size: 12px; color: #999; line-height: 1.4; }
+
+    .popover-weekdays { display: flex; justify-content: space-between; padding: 0 5px; }
+    .day-col { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+    .day-name { font-size: 12px; color: #888; font-family: var(--font-mono); }
+    .day-circle { width: 34px; height: 34px; border-radius: 50%; border: 2px solid #333; display: flex; justify-content: center; align-items: center; background: rgba(0,0,0,0.3); position: relative; overflow: hidden; }
+    .day-circle.current-day { border-color: #4DA8FF; box-shadow: 0 0 10px rgba(77, 168, 255, 0.3); }
+    .day-circle.fire-active { border: none; }
+    /* 🩸 KHOON JAISA LAAL (BLOOD RED) GLOW FOR MISSED DAYS 🩸 */
+    .day-circle.missed-day { border: none; box-shadow: 0 0 15px rgba(255, 0, 0, 0.7); }
+    .day-circle.missed-day::before {
+        content: ''; position: absolute; top: 50%; left: 50%; width: 250%; height: 250%;
+        background: conic-gradient(transparent, #ff0000 20%, transparent 40%, #8b0000 70%, transparent 90%);
+        transform: translate(-50%, -50%); animation: rotateGlow 3s linear infinite; z-index: 0;
+    }
+    .day-circle.missed-day::after { 
+        content: ''; position: absolute; inset: 2px; background: #1a0505; border-radius: 50%; z-index: 1; 
+    }
+    .day-circle.fire-active::before { content: ''; position: absolute; top: 50%; left: 50%; width: 250%; height: 250%; background: conic-gradient(transparent, #ff00aa 20%, transparent 40%, #00e5ff 70%, transparent 90%); transform: translate(-50%, -50%); animation: rotateGlow 3s linear infinite; z-index: 0; }
+    .day-circle.fire-active::after { content: ''; position: absolute; inset: 2px; background: #141419; border-radius: 50%; z-index: 1; }
+    .fire-emoji { position: relative; z-index: 2; font-size: 15px; text-shadow: 0 0 5px rgba(255, 184, 77, 0.8); }
+
+    .progress-title { margin: 0 0 15px 0; font-size: 13px; color: #ccc; }
+    .progress-info-row { display: flex; justify-content: space-between; font-size: 12px; color: #fff; margin-bottom: 8px; font-weight: bold; }
+    .popover-bar-bg { width: 100%; height: 8px; background: #1a1a24; border-radius: 10px; position: relative; border: 1px solid #333; }
+    .popover-bar-fill { height: 100%; background: linear-gradient(90deg, #4DA8FF, #ff00aa); border-radius: 10px; transition: width 0.5s ease-out; box-shadow: 0 0 15px rgba(255, 0, 170, 0.6); }
+
+    .extend-streak-btn-new { width: 100%; padding: 14px; background: #5a4bda; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
+    .extend-streak-btn-new:hover { background: #4738b5; }
+    
+</style>
+</head>
+<body>
+    <div id="loginScreen" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0F0F0F; z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center;">
+        <h1 style="font-family: 'Syne', sans-serif; font-size: 32px; color: #fff;">JEE Command Center</h1>
+        <p style="color: #888; margin-bottom: 30px;">Parent Access Only 🔒</p>
+        
+        <button id="googleLoginBtn" style="padding: 15px 30px; font-size: 16px; font-weight: bold; background: #fff; color: #000; border: none; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 10px;">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" width="20" alt="Google">
+            Sign in with Google
+        </button>
+        
+        <p id="loginErrorMsg" style="color: #ff4757; margin-top: 15px; display: none; text-align: center;"></p>
+    </div>
+
+    <nav class="bubble-sidebar">
+        <div class="bubble-btn" id="menuToggleBtn" style="margin: 0 10px; width: 45px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="bubble-icon">
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+            <span class="bubble-text">Menu</span>
+        </div>
+
+        <div class="centered-buttons">
+            <div class="bubble-btn" id="homeBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="bubble-icon">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
+                <span class="bubble-text">Home</span>
+            </div>
+
+            <div class="bubble-btn" id="tasksBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="bubble-icon">
+                    <polyline points="9 11 12 14 22 4"></polyline>
+                    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                </svg>
+                <span class="bubble-text">Tasks</span>
+            </div>
+            
+            <div class="bubble-btn" id="historyBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="bubble-icon">
+                    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                    <path d="M3 3v5h5"></path>
+                    <path d="M12 7v5l4 2"></path>
+                </svg>
+                <span class="bubble-text">History</span>
+            </div>
+
+            <div class="bubble-btn" id="analyticsBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="bubble-icon">
+                    <path d="M18 20V10"></path>
+                    <path d="M12 20V4"></path>
+                    <path d="M6 20v-6"></path>
+                </svg>
+                <span class="bubble-text">Analytics</span>
+            </div>
+        </div>
+    </nav>
+    
+<div class="streak-widget-container">
+        
+        <div class="widget-simple">
+            <div class="streak-glass-box"></div>
+            <div class="streak-info">
+                <span class="streak-label">STREAK</span>
+                <span class="streak-count" id="streakCountDisplay">0</span>
+            </div>
+            <div class="fire-container-small">
+                <div class="fire__wrapper" id="dynamicFire">
+                  <div class="fire" id="red"><div class="fire__center" id="yellow"></div></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="streak-popover-large">
+            <div class="popover-header">
+                <div class="popover-fire-circle"><span id="popoverStreakNumBig">0</span></div>
+                <div class="popover-header-text">
+                    <h3>Days Streak!!</h3>
+                    <p>Every day counts!<br>Keep the momentum going!</p>
+                </div>
+            </div>
+
+            <div class="popover-weekdays">
+                <div class="day-col"><span class="day-name">M</span><div class="day-circle fire-active"><span class="fire-emoji">🔥</span></div></div>
+                <div class="day-col"><span class="day-name">T</span><div class="day-circle fire-active"><span class="fire-emoji">🔥</span></div></div>
+                <div class="day-col"><span class="day-name">W</span><div class="day-circle fire-active"><span class="fire-emoji">🔥</span></div></div>
+                <div class="day-col"><span class="day-name">Th</span><div class="day-circle current-day"></div></div>
+                <div class="day-col"><span class="day-name">F</span><div class="day-circle"></div></div>
+                <div class="day-col"><span class="day-name">S</span><div class="day-circle"></div></div>
+                <div class="day-col"><span class="day-name">S</span><div class="day-circle"></div></div>
+            </div>
+
+            <div class="popover-progress-section">
+                <p class="progress-title">Complete today's goal to extend your streak!</p>
+                <div class="progress-info-row">
+                    <span>Watch Hours</span>
+                    <span id="popoverTimeText">0h 00m <span style="color:#888;">/ 12h</span></span>
+                </div>
+                <div class="popover-bar-bg" title="Current Study Time">
+                    <div class="popover-bar-fill" id="popoverBarFill" style="width: 0%;"></div>
+                </div>
+            </div>
+            <button class="extend-streak-btn-new">Show My Streak</button>
+        </div>
+    </div>
+
+    <div class="container">
+        
+
+        <div class="preload" style="display: none;">
+            <img src="https://assets.codepen.io/11339822/RED-01.png" alt="" />
+            <img src="https://assets.codepen.io/11339822/RED-02.png" alt="" />
+            <img src="https://assets.codepen.io/11339822/RED-03.png" alt="" />
+            <img src="https://assets.codepen.io/11339822/RED-04.png" alt="" />
+            <img src="https://assets.codepen.io/11339822/RED-05.png" alt="" />
+            <img src="https://assets.codepen.io/11339822/RED-06.png" alt="" />
+            <img src="https://assets.codepen.io/11339822/RED-07.png" alt="" />
+            <img src="https://assets.codepen.io/11339822/RED-08.png" alt="" />
+            <img src="https://assets.codepen.io/11339822/RED-09.png" alt="" />
+            <img src="https://assets.codepen.io/11339822/RED-10.png" alt="" />
+            <img src="https://assets.codepen.io/11339822/YELLOW-01.png" alt="" />
+            <img src="https://assets.codepen.io/11339822/YELLOW-02.png" alt="" />
+            <img src="https://assets.codepen.io/11339822/YELLOW-03.png" alt="" />
+            <img src="https://assets.codepen.io/11339822/YELLOW-04.png" alt="" />
+            <img src="https://assets.codepen.io/11339822/YELLOW-05.png" alt="" />
+            <img src="https://assets.codepen.io/11339822/YELLOW-06.png" alt="" />
+            <img src="https://assets.codepen.io/11339822/YELLOW-07.png" alt="" />
+            <img src="https://assets.codepen.io/11339822/YELLOW-08.png" alt="" />
+            <img src="https://assets.codepen.io/11339822/YELLOW-09.png" alt="" />
+            <img src="https://assets.codepen.io/11339822/YELLOW-10.png" alt="" />
+        </div>
+        <div class="subject-buttons">
+            <button class="button subject-btn active" data-subject="Physics">
+                <div class="button-outer">
+                    <div class="button-inner"><span>Physics</span></div>
+                </div>
+            </button>
+            
+            <button class="button subject-btn" data-subject="Chemistry">
+                <div class="button-outer">
+                    <div class="button-inner"><span>Chemistry</span></div>
+                </div>
+            </button>
+            
+            <button class="button subject-btn" data-subject="Maths">
+                <div class="button-outer">
+                    <div class="button-inner"><span>Maths</span></div>
+                </div>
+            </button>
+        </div>
+        <time id="display">00:00.00</time>
+
+        <div class="controls">
+            <button id="lapBtn" disabled>Lap</button>
+            <button id="resetBtn" style="display: none;">Reset</button>
+
+            <button id="startBtn">Start</button>
+            <button id="stopBtn" style="display: none;">Stop</button>
+        </div>
+
+        <ul class="laps" id="lapsList"></ul>
+    </div>
+
+<script type="module" src="index.js"></script>

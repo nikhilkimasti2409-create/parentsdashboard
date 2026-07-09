@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Analytics - JEE Command Center</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+    /* ═══════════════════════════════════════════
+       BASE STYLES & THEME
+    ═══════════════════════════════════════════ */
+    :root {
+        --bg: #0F0F0F;
+        --surface: rgba(25, 25, 30, 0.6);
+        --border: rgba(255, 255, 255, 0.08);
+        --font-display: 'Syne', sans-serif;
+        --font-mono: 'DM Mono', monospace;
+        --physics: #4DA8FF;
+        --chemistry: #3DFF8F;
+        --maths: #FF7B4D;
+    }
+    html, body {
+        padding: 0; margin: 0; background-color: var(--bg); color: #fff;
+        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+        min-height: 100vh; display: flex;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+
+    /* ═══════════════════════════════════════════
+       SIDEBAR (Same as Main Page for easy Navigation)
+    ═══════════════════════════════════════════ */
+    .bubble-sidebar {
+        position: fixed; top: 20px; left: 20px; height: calc(100vh - 40px); width: 65px; 
+        border-radius: 25px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+        transition: width 0.4s cubic-bezier(0.25, 1, 0.5, 1); overflow: hidden; z-index: 100;
+        display: flex; flex-direction: column; align-items: center; padding: 20px 0;
+    }
+    .bubble-sidebar:hover { width: 250px; }
+    .bubble-sidebar::before {
+        content: ''; position: absolute; top: 50%; left: 50%; width: 200vh; height: 200vh;
+        background: conic-gradient(transparent, #ff00aa 15%, transparent 30%, #00e5ff 65%, transparent 85%);
+        transform: translate(-50%, -50%); animation: rotateGlow 3.5s linear infinite; filter: blur(15px) brightness(1.5); z-index: -2;
+    }
+    .bubble-sidebar::after {
+        content: ''; position: absolute; inset: 4px; background: rgba(15, 15, 20, 0.9);
+        backdrop-filter: blur(20px); border-radius: 21px; z-index: -1;
+    }
+    .bubble-sidebar > * { position: relative; z-index: 1; }
+    .centered-buttons { display: flex; flex-direction: column; align-items: center; gap: 20px; width: 100%; margin-top: 20px; padding: 0 10px; }
+    .bubble-btn {
+        display: flex; align-items: center; width: 45px; height: 45px; border-radius: 50%;
+        background: rgba(255, 255, 255, 0.05); box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.1), 0 5px 15px rgba(0,0,0,0.4);
+        border: 1px solid rgba(255, 255, 255, 0.1); cursor: pointer; transition: all 0.3s ease; overflow: hidden;
+    }
+    .bubble-sidebar:hover .bubble-btn { width: 100%; border-radius: 15px; }
+    .bubble-btn:hover { background: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255, 255, 255, 0.3); transform: translateY(-2px); }
+    .bubble-icon { min-width: 24px; height: 24px; color: #888; margin-left: 10px; transition: color 0.3s ease; }
+    .bubble-btn:hover .bubble-icon { color: #fff; }
+    .bubble-text { color: #fff; font-size: 16px; margin-left: 15px; opacity: 0; white-space: nowrap; transition: opacity 0.3s ease; }
+    .bubble-sidebar:hover .bubble-text { opacity: 1; transition-delay: 0.1s; }
+    @keyframes rotateGlow { 100% { transform: translate(-50%, -50%) rotate(360deg); } }
+
+    /* Active State for Analytics Button */
+    #analyticsBtn { background: rgba(0, 229, 255, 0.2); border-color: rgba(0, 229, 255, 0.5); }
+    #analyticsBtn .bubble-icon { color: #00e5ff; }
+
+    /* ═══════════════════════════════════════════
+       MAIN ANALYTICS LAYOUT
+    ═══════════════════════════════════════════ */
+    .main-content {
+        margin-left: 100px; padding: 40px; width: calc(100% - 100px); max-width: 1200px;
+    }
+    .page-title {
+        font-family: var(--font-display); font-size: 42px; font-weight: 800; 
+        margin: 0 0 10px 0; background: linear-gradient(90deg, #fff, #888);
+        -webkit-background-clip: text; color: transparent;
+    }
+    .page-subtitle { color: #888; font-size: 16px; margin-bottom: 40px; font-family: var(--font-mono); }
+
+    .grid-container {
+        display: grid; grid-template-columns: 1fr 1fr; gap: 30px;
+    }
+
+    /* Glassmorphism Cards */
+    .glass-card {
+        background: var(--surface); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+        border: 1px solid var(--border); border-radius: 20px; padding: 30px;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+    }
+    .card-title { font-family: var(--font-display); font-size: 20px; color: #fff; margin: 0 0 25px 0; border-bottom: 1px solid var(--border); padding-bottom: 15px; }
+
+    /* ═══════════════════════════════════════════
+       TODAY'S SUBJECT BARS
+    ═══════════════════════════════════════════ */
+    .subject-row { margin-bottom: 25px; }
+    .subject-info { display: flex; justify-content: space-between; margin-bottom: 8px; font-weight: bold; font-size: 15px; }
+    .subj-time { font-family: var(--font-mono); color: #aaa; font-weight: normal; }
+    
+    .bar-bg { width: 100%; height: 12px; background: rgba(0,0,0,0.5); border-radius: 10px; overflow: hidden; border: 1px solid var(--border); }
+    .bar-fill { height: 100%; border-radius: 10px; width: 0%; transition: width 1.5s cubic-bezier(0.25, 1, 0.5, 1); box-shadow: 0 0 10px currentColor; }
+
+    .phys-fill { background: var(--physics); color: var(--physics); }
+    .chem-fill { background: var(--chemistry); color: var(--chemistry); }
+    .math-fill { background: var(--maths); color: var(--maths); }
+
+    .phys-text { color: var(--physics); }
+    .chem-text { color: var(--chemistry); }
+    .math-text { color: var(--maths); }
+
+    /* ═══════════════════════════════════════════
+       TOTAL TIME CIRCLE 
+    ═══════════════════════════════════════════ */
+    .total-time-container { display: flex; justify-content: center; align-items: center; padding: 20px 0; }
+    .total-circle {
+        width: 180px; height: 180px; border-radius: 50%;
+        background: radial-gradient(circle, rgba(25,25,30,1) 60%, rgba(77,168,255,0.2) 100%);
+        border: 2px solid rgba(77,168,255,0.3); display: flex; flex-direction: column; justify-content: center; align-items: center;
+        box-shadow: 0 0 30px rgba(77,168,255,0.1);
+    }
+    .circle-label { font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 5px; }
+    .circle-time { font-family: var(--font-display); font-size: 32px; font-weight: bold; color: #fff; }
+
+    /* 🔥 CARD 3: YOUTUBE/PW SCREEN TIME 🔥 */
+    :root { --youtube: #f43f5e; }
+    .screen-time-list { display: flex; flex-direction: column; gap: 12px; max-height: 250px; overflow-y: auto; padding-right: 5px; }
+    .st-item { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px; border-left: 4px solid var(--youtube); transition: background 0.3s; cursor: default; }
+    .st-item:hover { background: rgba(255,255,255,0.05); }
+    .st-name { font-size: 14px; color: #ddd; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 70%; font-family: "Helvetica", sans-serif; }
+    .st-time { font-family: var(--font-mono); font-size: 14px; color: var(--youtube); font-weight: bold; text-shadow: 0 0 8px rgba(244, 63, 94, 0.4); }
+    .screen-time-list::-webkit-scrollbar { width: 5px; }
+    .screen-time-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 5px; }
+    .screen-time-list::-webkit-scrollbar-thumb:hover { background: var(--youtube); }
+
+</style>
+</head>
+<body>
+
+   <nav class="bubble-sidebar">
+        <div class="bubble-btn" id="menuToggleBtn" style="margin: 0 10px; width: 45px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="bubble-icon"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+            <span class="bubble-text">Menu</span>
+        </div>
+        <div class="centered-buttons">
+            <div class="bubble-btn" id="homeBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="bubble-icon"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                <span class="bubble-text">Dashboard</span>
+            </div>
+            <div class="bubble-btn" id="historyBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="bubble-icon"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path><path d="M12 7v5l4 2"></path></svg>
+                <span class="bubble-text">History</span>
+            </div>
+            <div class="bubble-btn" id="analyticsBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="bubble-icon"><path d="M18 20V10"></path><path d="M12 20V4"></path><path d="M6 20v-6"></path></svg>
+                <span class="bubble-text">Analytics</span>
+            </div>
+            <div class="bubble-btn" id="tasksBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="bubble-icon"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+                <span class="bubble-text">Tasks</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        <h1 class="page-title">Study Insights 🧬</h1>
+        <p class="page-subtitle" id="currentDateDisplay">Loading Date...</p>
+
+        <div class="grid-container">
+            
+            <div class="glass-card">
+                <h3 class="card-title">Today's Breakdown</h3>
+                
+                <div class="subject-row">
+                    <div class="subject-info">
+                        <span class="phys-text">PHYSICS</span>
+                        <span class="subj-time" id="physTime">0h 0m</span>
+                    </div>
+                    <div class="bar-bg"><div class="bar-fill phys-fill" id="physBar"></div></div>
+                </div>
+
+                <div class="subject-row">
+                    <div class="subject-info">
+                        <span class="chem-text">CHEMISTRY</span>
+                        <span class="subj-time" id="chemTime">0h 0m</span>
+                    </div>
+                    <div class="bar-bg"><div class="bar-fill chem-fill" id="chemBar"></div></div>
+                </div>
+
+                <div class="subject-row">
+                    <div class="subject-info">
+                        <span class="math-text">MATHEMATICS</span>
+                        <span class="subj-time" id="mathTime">0h 0m</span>
+                    </div>
+                    <div class="bar-bg"><div class="bar-fill math-fill" id="mathBar"></div></div>
+                </div>
+            </div>
+
+            <div class="glass-card">
+                <h3 class="card-title">Total Output Today</h3>
+                <div class="total-time-container">
+                    <div class="total-circle">
+                        <div class="circle-label">Session</div>
+                        <div class="circle-time" id="totalTimeDisplay">0h 0m</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-card" style="grid-column: 1 / -1;">
+                <h3 class="card-title" style="border-color: rgba(244, 63, 94, 0.4);">Screen Time Breakdown 📱</h3>
+                
+                <div id="platformTotals" style="display: flex; gap: 15px; margin-bottom: 25px; overflow-x: auto; padding-bottom: 10px;">
+                    </div>
+
+                <div id="screenTimeList" class="screen-time-list">
+                    <div style="color:#888; text-align:center; padding: 20px;">Aaj abhi tak koi tracked site open nahi hui hai.</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+<script src="analytics.js"></script>
+
+</body>
+</html>
