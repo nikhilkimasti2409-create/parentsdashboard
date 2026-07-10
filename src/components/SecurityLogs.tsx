@@ -1,6 +1,7 @@
 import React from 'react';
 import { ShieldAlert, AlertTriangle, Trash2, ShieldCheck } from 'lucide-react';
-import { FIREBASE_PROJECT_ID } from '../utils';
+import { doc, deleteDoc } from 'firebase/firestore';
+import { db } from '../firebase';
 import type { SecurityViolation } from '../utils';
 
 interface SecurityLogsProps {
@@ -19,10 +20,9 @@ const SecurityLogs: React.FC<SecurityLogsProps> = ({ violations, onRefresh }) =>
     
     setClearing(true);
     try {
-      // Loop over and delete documents
+      // Loop over and delete documents using official Firebase SDK
       for (const log of violations) {
-        const url = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/SecurityViolations/${log.id}`;
-        await fetch(url, { method: 'DELETE' });
+        await deleteDoc(doc(db, "SecurityViolations", log.id));
       }
       alert("✅ All security logs deleted successfully!");
       onRefresh();
@@ -62,7 +62,7 @@ const SecurityLogs: React.FC<SecurityLogsProps> = ({ violations, onRefresh }) =>
         <div className="bg-slate-950/40 border border-red-500/15 rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-md relative overflow-hidden motionsite-card-shine">
           <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-red-500 to-transparent blur-[1px]" />
           
-          <div className="flex items-center justify-between border-b border-white/5 pb-4 mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/5 pb-4 mb-6">
             <h3 className="text-base font-bold text-white flex items-center gap-2">
               <ShieldAlert className="w-5 h-5 text-red-400" /> Active Alert Board
             </h3>
@@ -84,12 +84,12 @@ const SecurityLogs: React.FC<SecurityLogsProps> = ({ violations, onRefresh }) =>
                     key={violation.id}
                     className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-red-950/5 p-4 border border-red-500/10 hover:border-red-500/25 rounded-2xl transition-all duration-300 gap-3"
                   >
-                    <div className="flex items-start gap-4 text-left">
+                    <div className="flex items-start gap-4 text-left flex-1 min-w-0">
                       <div className="p-2.5 rounded-xl bg-red-500/10 border border-red-500/25 text-red-400 shrink-0">
                         <AlertTriangle className="w-5 h-5" />
                       </div>
-                      <div className="flex flex-col gap-1">
-                        <span className="text-sm text-neutral-200 font-bold font-sans">
+                      <div className="flex flex-col gap-1 flex-1 min-w-0">
+                        <span className="text-sm text-neutral-200 font-bold font-sans break-words">
                           {violation.details}
                         </span>
                         <span className="text-[10px] text-red-400 font-mono bg-red-500/5 px-2 py-0.5 rounded-md border border-red-500/10 w-fit">

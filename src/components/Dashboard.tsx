@@ -78,10 +78,10 @@ const Dashboard: React.FC<DashboardProps> = ({ liveStatus, historyRecords, onNav
   };
 
   return (
-    <div className="min-h-[calc(100vh-80px)] w-full flex flex-col items-center pt-24 pb-12 px-5 select-none">
+    <div className="min-h-[calc(100vh-80px)] w-full flex flex-col items-center pt-10 md:pt-24 pb-12 px-4 sm:px-5 select-none">
       
       {/* 1. TOP RIGHT STREAK WIDGET */}
-      <div className="streak-widget-container group fixed top-6 right-6 w-36 h-14 z-[90] cursor-pointer">
+      <div className="streak-widget-container group fixed top-6 right-6 w-36 h-14 z-[90] cursor-pointer hidden md:block">
         {/* Simple view */}
         <div className="widget-simple absolute inset-0 flex items-center justify-between px-4 bg-slate-950/80 border border-white/10 rounded-2xl shadow-xl transition-all duration-300 group-hover:opacity-0 group-hover:invisible">
           <div className="flex flex-col items-start">
@@ -172,7 +172,7 @@ const Dashboard: React.FC<DashboardProps> = ({ liveStatus, historyRecords, onNav
         </div>
 
         {/* 2. SUBJECT BUTTONS SPLIT */}
-        <div className="flex justify-center gap-3.5 mb-8 w-full">
+        <div className="flex flex-wrap justify-center gap-2.5 sm:gap-3.5 mb-8 w-full">
           {['Physics', 'Chemistry', 'Maths'].map((sub) => {
             const isActive = liveStatus.isStudying.includes(sub);
             const btnColor = sub === 'Physics' ? 'text-[#4DA8FF]' : sub === 'Chemistry' ? 'text-[#3DFF8F]' : 'text-[#FF7B4D]';
@@ -196,12 +196,12 @@ const Dashboard: React.FC<DashboardProps> = ({ liveStatus, historyRecords, onNav
         </div>
 
         {/* 3. BIG TIME DISPLAY */}
-        <div className="text-[76px] sm:text-[84px] font-black text-white leading-none font-mono tracking-wide drop-shadow-[0_0_30px_rgba(255,255,255,0.05)] mb-8">
+        <div className="text-5xl sm:text-7xl md:text-[84px] font-black text-white leading-none font-mono tracking-wide drop-shadow-[0_0_30px_rgba(255,255,255,0.05)] mb-8 text-center">
           {formatToStopwatch(liveStatus.totalTimeMs)}
         </div>
 
         {/* 4. CURRENT ACTIVE LECTURE TARGET STATUS */}
-        <div className="w-full bg-slate-950/40 border border-white/5 p-6 rounded-2xl flex flex-col gap-3 relative overflow-hidden backdrop-blur-md motionsite-card-shine">
+        <div className="w-full bg-slate-950/40 border border-white/5 p-4 sm:p-6 rounded-2xl flex flex-col gap-3 relative overflow-hidden backdrop-blur-md motionsite-card-shine">
           <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-20" />
           <div className="flex items-center justify-between border-b border-white/5 pb-2.5">
             <span className="text-[10px] text-neutral-500 tracking-wider uppercase font-mono">Current Live Session</span>

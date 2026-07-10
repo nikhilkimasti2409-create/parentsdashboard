@@ -2,6 +2,9 @@
 // 🛠️ PARENTS DASHBOARD UTILITIES & API CLIENT
 // ==========================================
 
+import { doc, getDoc, collection, getDocs } from 'firebase/firestore';
+import { db } from './firebase';
+
 export const FIREBASE_PROJECT_ID = "my-dashboard-e2eb5";
 
 export interface LiveStatusData {
@@ -11,6 +14,7 @@ export interface LiveStatusData {
   screenTimeData: Record<string, { time: number; url: string; notes?: string }>;
   tasks: Array<{ text: string; completed: boolean }>;
   extensionActive?: string;
+  lastHeartbeatTime?: number;
 }
 
 export interface HistoryRecord {
@@ -58,121 +62,114 @@ export function formatToStopwatch(ms: number): string {
   return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}.00`;
 }
 
-// 1. Fetch live status of today
+// 1. Fetch live status of today (Firestore SDK)
 export async function fetchLiveStatus(): Promise<LiveStatusData> {
-  const url = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/LiveStatus/MyData`;
-  const res = await fetch(url);
-  const data = await res.json();
-  
-  if (!data || !data.fields) {
-    return {
-      totalTimeMs: 0,
-      streak: 0,
-      isStudying: "None",
-      screenTimeData: {},
-      tasks: []
-    };
-  }
-
-  const fields = data.fields;
-  let screenTimeData = {};
   try {
-    screenTimeData = JSON.parse(fields.screenTimeJson?.stringValue || "{}");
-  } catch {}
-
-  let tasks = [];
-  try {
-    tasks = JSON.parse(fields.tasksJson?.stringValue || "[]");
-  } catch {}
-
-  return {
-    totalTimeMs: parseInt(fields.totalTimeMs?.integerValue || "0"),
-    streak: parseInt(fields.streak?.integerValue || "0"),
-    isStudying: fields.isStudying?.stringValue || "None",
-    screenTimeData,
-    tasks,
-    extensionActive: fields.extensionActive?.stringValue || "disabled"
-  };
-}
-
-// 2. Fetch all historical focus records
-export async function fetchHistory(): Promise<HistoryRecord[]> {
-  const url = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/HistoryData`;
-  const res = await fetch(url);
-  const data = await res.json();
-
-  if (!data || !data.documents) return [];
-
-  const records: HistoryRecord[] = data.documents.map((doc: any) => {
-    const docNameParts = doc.name.split('/');
-    const dateStrWithDash = docNameParts[docNameParts.length - 1]; // e.g. 09-07-2026
-    const dateStr = dateStrWithDash.replace(/-/g, '/'); // e.g. 09/07/2026
-
-    const fields = doc.fields || {};
-
-    let studyLogs: string[] = [];
-    if (fields.studyLogs && fields.studyLogs.arrayValue && fields.studyLogs.arrayValue.values) {
-      studyLogs = fields.studyLogs.arrayValue.values.map((v: any) => v.stringValue || "");
+    const docRef = doc(db, "LiveStatus", "MyData");
+    const docSnap = await getDoc(docRef);
+    if (!docSnap.exists()) {
+      return {
+        totalTimeMs: 0,
+        streak: 0,
+        isStudying: "None",
+        screenTimeData: {},
+        tasks: []
+      };
     }
 
-    return {
-      date: dateStr,
-      totalTimeMs: parseInt(fields.totalTimeMs?.integerValue || "0"),
-      streak: parseInt(fields.streak?.integerValue || "0"),
-      physicsTime: parseInt(fields.physicsTime?.integerValue || "0"),
-      chemTime: parseInt(fields.chemTime?.integerValue || "0"),
-      mathsTime: parseInt(fields.mathsTime?.integerValue || "0"),
-      studyLogs
-    };
-  });
+    const data = docSnap.data();
+    let screenTimeData = {};
+    try {
+      screenTimeData = JSON.parse(data.screenTimeJson || "{}");
+    } catch {}
 
-  // Sort descending by date
-  return records.sort((a, b) => {
-    const [d1, m1, y1] = a.date.split('/');
-    const [d2, m2, y2] = b.date.split('/');
-    return new Date(`${y2}-${m2}-${d2}`).getTime() - new Date(`${y1}-${m1}-${d1}`).getTime();
-  });
+    let tasks = [];
+    try {
+      tasks = JSON.parse(data.tasksJson || "[]");
+    } catch {}
+
+    return {
+      totalTimeMs: Number(data.totalTimeMs || 0),
+      streak: Number(data.streak || 0),
+      isStudying: data.isStudying || "None",
+      screenTimeData,
+      tasks,
+      extensionActive: data.extensionActive || "disabled",
+      lastHeartbeatTime: Number(data.lastHeartbeatTime || 0)
+    };
+  } catch (e) {
+    console.error("fetchLiveStatus error:", e);
+    throw e;
+  }
 }
 
-// 3. Fetch distraction history logs (browser clean history logs) for a date
-export async function fetchDistractionLogs(dateKey: string): Promise<DistractionLog[]> {
-  const normalized = dateKey.replace(/\//g, '-');
-  const url = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/DistractionHistory/${normalized}`;
-  const res = await fetch(url);
-  const data = await res.json();
-
-  if (!data || !data.fields) return [];
-
+// 2. Fetch all historical focus records (Firestore SDK)
+export async function fetchHistory(): Promise<HistoryRecord[]> {
   try {
-    const logs = JSON.parse(data.fields.historyJson?.stringValue || "[]");
-    return logs;
-  } catch {
+    const querySnapshot = await getDocs(collection(db, "HistoryData"));
+    const records: HistoryRecord[] = querySnapshot.docs.map((docSnap) => {
+      const dateId = docSnap.id; // e.g. 09-07-2026
+      const dateStr = dateId.replace(/-/g, '/'); // e.g. 09/07/2026
+      const data = docSnap.data();
+
+      return {
+        date: dateStr,
+        totalTimeMs: Number(data.totalTimeMs || 0),
+        streak: Number(data.streak || 0),
+        physicsTime: Number(data.physicsTime || 0),
+        chemTime: Number(data.chemTime || 0),
+        mathsTime: Number(data.mathsTime || 0),
+        studyLogs: data.studyLogs || []
+      };
+    });
+
+    // Sort descending by date
+    return records.sort((a, b) => {
+      const [d1, m1, y1] = a.date.split('/');
+      const [d2, m2, y2] = b.date.split('/');
+      return new Date(`${y2}-${m2}-${d2}`).getTime() - new Date(`${y1}-${m1}-${d1}`).getTime();
+    });
+  } catch (e) {
+    console.error("fetchHistory error:", e);
     return [];
   }
 }
 
-// 4. Fetch all security violations
+// 3. Fetch distraction history logs (browser clean history logs) for a date (Firestore SDK)
+export async function fetchDistractionLogs(dateKey: string): Promise<DistractionLog[]> {
+  try {
+    const normalized = dateKey.replace(/\//g, '-');
+    const docRef = doc(db, "DistractionHistory", normalized);
+    const docSnap = await getDoc(docRef);
+    if (!docSnap.exists()) return [];
+    
+    const data = docSnap.data();
+    return JSON.parse(data.historyJson || "[]");
+  } catch (e) {
+    console.error("fetchDistractionLogs error:", e);
+    return [];
+  }
+}
+
+// 4. Fetch all security violations (Firestore SDK)
 export async function fetchSecurityViolations(): Promise<SecurityViolation[]> {
-  const url = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/SecurityViolations`;
-  const res = await fetch(url);
-  const data = await res.json();
+  try {
+    const querySnapshot = await getDocs(collection(db, "SecurityViolations"));
+    const violations: SecurityViolation[] = querySnapshot.docs.map((docSnap) => {
+      const data = docSnap.data();
+      return {
+        id: docSnap.id,
+        type: data.type || "security_violation",
+        details: data.details || "Unknown safety warning.",
+        timestamp: data.timestamp || new Date().toISOString(),
+        dateStr: data.dateStr || ""
+      };
+    });
 
-  if (!data || !data.documents) return [];
-
-  const violations: SecurityViolation[] = data.documents.map((doc: any) => {
-    const docNameParts = doc.name.split('/');
-    const id = docNameParts[docNameParts.length - 1];
-
-    const fields = doc.fields || {};
-    return {
-      id,
-      type: fields.type?.stringValue || "security_violation",
-      details: fields.details?.stringValue || "Unknown safety warning.",
-      timestamp: fields.timestamp?.stringValue || new Date().toISOString(),
-      dateStr: fields.dateStr?.stringValue || ""
-    };
-  });
-
-  // Sort descending by timestamp
-  return violations.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    // Sort descending by timestamp
+    return violations.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  } catch (e) {
+    console.error("fetchSecurityViolations error:", e);
+    return [];
+  }
 }

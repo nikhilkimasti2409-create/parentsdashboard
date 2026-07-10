@@ -14,7 +14,7 @@ const Tasks: React.FC<TasksProps> = ({ tasks }) => {
       <div className="w-full max-w-[650px]">
         
         {/* Title */}
-        <div className="mb-8 flex justify-between items-end">
+        <div className="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-3">
           <div>
             <h1 className="text-4xl font-extrabold font-display premium-glow-text animate-gradient-shift uppercase tracking-wider">
               Student Tasks 📋
@@ -69,7 +69,7 @@ const Tasks: React.FC<TasksProps> = ({ tasks }) => {
                     )}
                   </div>
                   <span
-                    className={`text-sm select-none break-all text-left font-sans ${
+                    className={`text-sm select-none break-words text-left font-sans flex-1 min-w-0 ${
                       task.completed 
                         ? 'line-through text-neutral-500 font-normal' 
                         : 'text-neutral-200 font-medium'

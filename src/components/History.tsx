@@ -10,6 +10,7 @@ interface HistoryProps {
 
 const History: React.FC<HistoryProps> = ({ historyRecords, onSelectDate }) => {
   const [searchQuery, setSearchQuery] = React.useState('');
+  const [expandedDate, setExpandedDate] = React.useState<string | null>(null);
 
   const filteredRecords = historyRecords.filter(r => r.date.includes(searchQuery));
 
@@ -18,7 +19,7 @@ const History: React.FC<HistoryProps> = ({ historyRecords, onSelectDate }) => {
       <div className="w-full max-w-[850px]">
         
         {/* Title */}
-        <div className="mb-8 flex justify-between items-end">
+        <div className="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
           <div>
             <h1 className="text-4xl font-extrabold font-display premium-glow-text animate-gradient-shift uppercase tracking-wider">
               Study Vault 🗄️
@@ -55,31 +56,48 @@ const History: React.FC<HistoryProps> = ({ historyRecords, onSelectDate }) => {
               const mTime = record.mathsTime || 0;
               const subTotal = pTime + cTime + mTime || 1;
 
-              return (
-                <li
-                  key={record.date}
-                  className="group relative bg-slate-950/40 border border-white/5 rounded-2xl overflow-hidden backdrop-blur-md flex flex-col transition-all duration-500 hover:scale-[1.01] hover:border-red-500/30 hover:shadow-[0_15px_35px_rgba(0,0,0,0.5)] hover:bg-slate-950/80"
-                >
-                  {/* Subtle background glow on card hover */}
-                  <div className="absolute top-[-30px] right-[-20px] w-[140px] h-[140px] bg-red-500/10 rounded-full blur-[40px] opacity-0 group-hover:opacity-100 transition-all duration-500 pointer-events-none" />
-                  
-                  {/* Header (Always Visible) */}
-                  <div className="relative z-10 p-5 px-6 flex justify-between items-center cursor-pointer border-b border-transparent group-hover:border-white/5 transition-all duration-500">
-                    <div className="flex items-center gap-3">
-                      <div className="w-2.5 h-2.5 rounded-full bg-red-500" />
-                      <span className="font-display font-bold text-lg text-white">{record.date}</span>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <span className="font-mono font-bold text-base text-cyan-400 drop-shadow-[0_0_10px_rgba(34,211,238,0.25)]">
-                        {formatMsToHrsMinsSecs(record.totalTimeMs)}
-                      </span>
-                      <span className="text-[10px] font-mono text-neutral-500 group-hover:text-red-400 transition-colors">HOVER TO EXPLAIN ▾</span>
-                    </div>
-                  </div>
+                const isExpanded = expandedDate === record.date;
 
-                  {/* Accordion Details (Expands on Hover) */}
-                  <div className="relative z-10 max-h-0 opacity-0 overflow-hidden group-hover:max-h-[380px] group-hover:opacity-100 group-hover:p-6 px-6 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]">
-                    <div className="flex flex-col md:flex-row gap-6 items-stretch pt-2">
+                return (
+                  <li
+                    key={record.date}
+                    className={`group relative bg-slate-950/40 border rounded-2xl overflow-hidden backdrop-blur-md flex flex-col transition-all duration-500 ${
+                      isExpanded
+                        ? 'border-red-500/30 shadow-[0_15px_35px_rgba(0,0,0,0.5)] bg-slate-950/80 scale-[1.01]'
+                        : 'border-white/5 hover:border-white/10 hover:bg-slate-950/60'
+                    }`}
+                  >
+                    {/* Subtle background glow on card hover */}
+                    <div className="absolute top-[-30px] right-[-20px] w-[140px] h-[140px] bg-red-500/10 rounded-full blur-[40px] opacity-0 group-hover:opacity-100 transition-all duration-500 pointer-events-none" />
+                    
+                    {/* Header (Always Visible) */}
+                    <div 
+                      onClick={() => setExpandedDate(isExpanded ? null : record.date)}
+                      className={`relative z-10 p-5 px-6 flex justify-between items-center cursor-pointer border-b transition-all duration-500 ${
+                        isExpanded ? 'border-white/5' : 'border-transparent group-hover:border-white/5'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-2.5 h-2.5 rounded-full bg-red-500" />
+                        <span className="font-display font-bold text-lg text-white">{record.date}</span>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <span className="font-mono font-bold text-base text-cyan-400 drop-shadow-[0_0_10px_rgba(34,211,238,0.25)]">
+                          {formatMsToHrsMinsSecs(record.totalTimeMs)}
+                        </span>
+                        <span className="text-[10px] font-mono text-neutral-500 group-hover:text-red-400 transition-colors">
+                          {isExpanded ? 'TAP TO COLLAPSE ▴' : 'TAP TO EXPLAIN ▾'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Accordion Details (Expands on Tap) */}
+                    <div className={`relative z-10 overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+                      isExpanded
+                        ? 'max-h-[500px] opacity-100 p-5 sm:p-6'
+                        : 'max-h-0 opacity-0 px-5 sm:px-6'
+                    }`}>
+                      <div className="flex flex-col md:flex-row gap-6 items-stretch pt-2">
                       
                       {/* Left Column: Stats & Button */}
                       <div className="flex flex-col justify-between gap-4 md:w-[40%]">

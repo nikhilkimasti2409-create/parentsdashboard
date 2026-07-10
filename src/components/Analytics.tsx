@@ -288,9 +288,9 @@ const Analytics: React.FC<AnalyticsProps> = ({ selectedDate, setSelectedDate, hi
                   <div
                     key={index}
                     title={`${title}\nURL: ${data.url}`}
-                    className="flex justify-between items-center bg-black/25 p-4 border border-white/5 hover:border-white/10 rounded-2xl transition-all duration-300"
+                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-black/25 p-4 border border-white/5 hover:border-white/10 rounded-2xl transition-all duration-300"
                   >
-                    <div className="flex flex-col gap-1 max-w-[75%] text-left">
+                    <div className="flex flex-col gap-1 text-left flex-1 min-w-0">
                       <span className="text-sm text-neutral-200 truncate font-semibold font-sans">
                         {title}
                       </span>
@@ -301,7 +301,8 @@ const Analytics: React.FC<AnalyticsProps> = ({ selectedDate, setSelectedDate, hi
                       )}
                       <span className="text-[10px] text-neutral-500 truncate font-mono">{data.url}</span>
                     </div>
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto border-t sm:border-t-0 border-white/5 pt-2 sm:pt-0">
+                      <span className="text-[10px] text-neutral-500 font-mono sm:hidden">TIME SPENT:</span>
                       <span className="font-mono text-sm text-red-500 font-bold drop-shadow-[0_0_10px_rgba(239,68,68,0.3)]">
                         {formatMsToHrsMinsSecs(data.time)}
                       </span>
@@ -339,17 +340,23 @@ const Analytics: React.FC<AnalyticsProps> = ({ selectedDate, setSelectedDate, hi
                   <div
                     key={index}
                     title={`${log.title}\nURL: ${log.url}`}
-                    className="flex justify-between items-center bg-black/25 p-4 border border-white/5 hover:border-white/10 rounded-2xl transition-all duration-300"
+                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-black/25 p-4 border border-white/5 hover:border-white/10 rounded-2xl transition-all duration-300"
                   >
-                    <div className="flex flex-col gap-1 max-w-[80%] text-left">
+                    <div className="flex flex-col gap-1 text-left flex-1 min-w-0">
                       <span className="text-sm text-neutral-200 truncate font-semibold font-sans">
                         {log.title || "No Title Page"}
                       </span>
                       <span className="text-[10px] text-neutral-500 truncate font-mono">{log.url}</span>
                     </div>
-                    <div className="flex flex-col items-end gap-1 font-mono text-xs text-neutral-400 min-w-[120px]">
-                      <span className="text-cyan-400">{new Date(log.lastVisitTime).toLocaleTimeString()}</span>
-                      <span>Visits: {log.visitCount}</span>
+                    <div className="flex flex-row sm:flex-col justify-between sm:justify-center items-center sm:items-end gap-1.5 font-mono text-xs text-neutral-400 w-full sm:w-auto border-t sm:border-t-0 border-white/5 pt-2 sm:pt-0">
+                      <div className="flex items-center gap-1">
+                        <span className="text-[10px] text-neutral-500 sm:hidden">LAST VISIT:</span>
+                        <span className="text-cyan-400">{new Date(log.lastVisitTime).toLocaleTimeString()}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span className="text-[10px] text-neutral-500 sm:hidden">VISITS:</span>
+                        <span>{log.visitCount}</span>
+                      </div>
                     </div>
                   </div>
                 );

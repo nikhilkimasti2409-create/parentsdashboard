@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { initializeApp } from 'firebase/app';
-import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from 'firebase/auth';
+import { signInWithPopup, onAuthStateChanged, signOut } from 'firebase/auth';
 import type { User } from 'firebase/auth';
+import { doc, onSnapshot, collection } from 'firebase/firestore';
 import { Lock, AlertTriangle } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
@@ -9,20 +9,11 @@ import Tasks from './components/Tasks';
 import History from './components/History';
 import Analytics from './components/Analytics';
 import SecurityLogs from './components/SecurityLogs';
+import { db, auth, provider } from './firebase';
 import { fetchLiveStatus, fetchHistory, fetchSecurityViolations } from './utils';
 import type { LiveStatusData, HistoryRecord, SecurityViolation } from './utils';
 
-// Firebase configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyAHJte4EBZDE22L6RpDqn3qm3DUrY5Tkss",
-  projectId: "my-dashboard-e2eb5",
-  authDomain: "my-dashboard-e2eb5.firebaseapp.com"
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const provider = new GoogleAuthProvider();
+// Parents Access List
 
 const ALLOWED_EMAILS = ["dimplerjoshi2409@gmail.com", "tjangir2010@gmail.com", "kkrishnarjoshi0509@gmail.com", "nikhilkimasti2409@gmail.com"];
 
@@ -32,17 +23,28 @@ const App: React.FC = () => {
   const [currentTab, setCurrentTab] = useState<string>('dashboard');
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
+  const [currentTime, setCurrentTime] = useState<number>(Date.now());
+
   // Firestore Data State
   const [liveStatus, setLiveStatus] = useState<LiveStatusData>({
     totalTimeMs: 0,
     streak: 0,
     isStudying: "None",
     screenTimeData: {},
-    tasks: []
+    tasks: [],
+    lastHeartbeatTime: 0
   });
   const [historyRecords, setHistoryRecords] = useState<HistoryRecord[]>([]);
   const [securityViolations, setSecurityViolations] = useState<SecurityViolation[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+
+  // Active status ticker: updates currentTime state every 5 seconds to re-evaluate presence
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 5000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Monitor Authentication State
   useEffect(() => {
@@ -67,22 +69,91 @@ const App: React.FC = () => {
     return () => unsubscribe();
   }, []);
 
-  // Poll live data every 5 seconds, poll historical data every 15 seconds
+  // Monitor real-time database changes (low latency & offline support)
   useEffect(() => {
     if (!user) return;
 
-    const liveInterval = setInterval(() => {
-      fetchLiveStatus().then(setLiveStatus).catch(console.error);
-    }, 5000);
+    // 1. Listen to today's live status
+    const unsubscribeLive = onSnapshot(doc(db, "LiveStatus", "MyData"), (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        let screenTimeData = {};
+        try {
+          screenTimeData = JSON.parse(data.screenTimeJson || "{}");
+        } catch {}
 
-    const historyInterval = setInterval(() => {
-      fetchHistory().then(setHistoryRecords).catch(console.error);
-      fetchSecurityViolations().then(setSecurityViolations).catch(console.error);
-    }, 15000);
+        let tasks = [];
+        try {
+          tasks = JSON.parse(data.tasksJson || "[]");
+        } catch {}
+
+        setLiveStatus({
+          totalTimeMs: Number(data.totalTimeMs || 0),
+          streak: Number(data.streak || 0),
+          isStudying: data.isStudying || "None",
+          screenTimeData,
+          tasks,
+          extensionActive: data.extensionActive || "disabled",
+          lastHeartbeatTime: Number(data.lastHeartbeatTime || 0)
+        });
+      }
+    }, (error) => {
+      console.error("Live status listener error:", error);
+    });
+
+    // 2. Listen to history logs
+    const unsubscribeHistory = onSnapshot(collection(db, "HistoryData"), (querySnapshot) => {
+      const records: HistoryRecord[] = querySnapshot.docs.map((docSnap) => {
+        const dateId = docSnap.id;
+        const dateStr = dateId.replace(/-/g, '/');
+        const data = docSnap.data();
+
+        return {
+          date: dateStr,
+          totalTimeMs: Number(data.totalTimeMs || 0),
+          streak: Number(data.streak || 0),
+          physicsTime: Number(data.physicsTime || 0),
+          chemTime: Number(data.chemTime || 0),
+          mathsTime: Number(data.mathsTime || 0),
+          studyLogs: data.studyLogs || []
+        };
+      });
+
+      // Sort descending by date
+      const sorted = records.sort((a, b) => {
+        const [d1, m1, y1] = a.date.split('/');
+        const [d2, m2, y2] = b.date.split('/');
+        return new Date(`${y2}-${m2}-${d2}`).getTime() - new Date(`${y1}-${m1}-${d1}`).getTime();
+      });
+      setHistoryRecords(sorted);
+    }, (error) => {
+      console.error("History listener error:", error);
+    });
+
+    // 3. Listen to security violations (ordered descending by timestamp)
+    const unsubscribeViolations = onSnapshot(collection(db, "SecurityViolations"), (querySnapshot) => {
+      const violations: SecurityViolation[] = querySnapshot.docs.map((docSnap) => {
+        const data = docSnap.data();
+        return {
+          id: docSnap.id,
+          type: data.type || "security_violation",
+          details: data.details || "Unknown safety warning.",
+          timestamp: data.timestamp || new Date().toISOString(),
+          dateStr: data.dateStr || ""
+        };
+      });
+
+      // Sort descending by timestamp
+      const sorted = violations.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+      setSecurityViolations(sorted);
+    }, (error) => {
+      console.error("Security violations listener error:", error);
+    });
 
     return () => {
-      clearInterval(liveInterval);
-      clearInterval(historyInterval);
+      unsubscribeLive();
+      unsubscribeHistory();
+      unsubscribeViolations();
     };
   }, [user]);
 
@@ -167,6 +238,13 @@ const App: React.FC = () => {
     );
   }
 
+  // Compute real-time presence based on heartbeat
+  const isExtensionActive = liveStatus.lastHeartbeatTime && (currentTime - liveStatus.lastHeartbeatTime < 25000);
+  const computedLiveStatus = {
+    ...liveStatus,
+    extensionActive: isExtensionActive ? 'running' : 'disabled'
+  };
+
   // Parents Dashboard Content Layout
   return (
     <div className="min-h-screen bg-[#080a11] text-white flex">
@@ -179,20 +257,20 @@ const App: React.FC = () => {
         }}
         onLogout={handleSignOut}
         userEmail={user.email}
-        extensionActive={liveStatus.extensionActive}
+        extensionActive={computedLiveStatus.extensionActive}
       />
 
       {/* Main Page Area */}
-      <main className="flex-1 min-h-screen ml-[90px] relative">
+      <main className="flex-1 min-h-screen ml-0 md:ml-[90px] pt-16 md:pt-0 pb-16 md:pb-0 relative">
         {currentTab === 'dashboard' && (
           <Dashboard
-            liveStatus={liveStatus}
+            liveStatus={computedLiveStatus}
             historyRecords={historyRecords}
             onNavigateTab={handleSelectHistoryDate}
           />
         )}
         {currentTab === 'tasks' && (
-          <Tasks tasks={liveStatus.tasks} />
+          <Tasks tasks={computedLiveStatus.tasks} />
         )}
         {currentTab === 'history' && (
           <History
@@ -205,7 +283,7 @@ const App: React.FC = () => {
             selectedDate={selectedDate}
             setSelectedDate={setSelectedDate}
             historyRecords={historyRecords}
-            liveStatus={liveStatus}
+            liveStatus={computedLiveStatus}
           />
         )}
         {currentTab === 'security' && (
