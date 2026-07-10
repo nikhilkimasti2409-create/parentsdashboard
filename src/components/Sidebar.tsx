@@ -100,7 +100,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentTab, setCurrentTab, onLogout, 
       </nav>
 
       {/* Mobile Top Bar */}
-      <header className="md:hidden fixed top-0 left-0 right-0 h-16 bg-slate-950/80 backdrop-blur-xl border-b border-white/10 shadow-[0_4px_30px_rgba(0,0,0,0.4)] z-[100] flex items-center justify-between px-4">
+      <header className="md:hidden fixed top-0 left-0 right-0 h-[calc(4rem+env(safe-area-inset-top))] pt-[env(safe-area-inset-top)] bg-slate-950/80 backdrop-blur-xl border-b border-white/10 shadow-[0_4px_30px_rgba(0,0,0,0.4)] z-[100] flex items-center justify-between px-4">
         <div className="flex items-center gap-2">
           <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-br from-red-500/10 to-amber-500/10 border border-red-500/20 text-red-500">
             <Menu className="w-4.5 h-4.5 animate-pulse" />
@@ -131,7 +131,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentTab, setCurrentTab, onLogout, 
       </header>
 
       {/* Mobile Bottom Navigation Bar */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-slate-950/85 backdrop-blur-xl border-t border-white/10 shadow-[0_-8px_30px_rgba(0,0,0,0.5)] z-[100] flex items-center justify-around px-2 pb-safe">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 h-[calc(4rem+env(safe-area-inset-bottom))] pb-[env(safe-area-inset-bottom)] bg-slate-950/85 backdrop-blur-xl border-t border-white/10 shadow-[0_-8px_30px_rgba(0,0,0,0.5)] z-[100] flex items-center justify-around px-2">
         {menuItems.map((item) => {
           const Icon = item.icon;
           const isActive = currentTab === item.id;

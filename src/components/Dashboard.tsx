@@ -78,7 +78,7 @@ const Dashboard: React.FC<DashboardProps> = ({ liveStatus, historyRecords, onNav
   };
 
   return (
-    <div className="min-h-[calc(100vh-80px)] w-full flex flex-col items-center pt-10 md:pt-24 pb-12 px-4 sm:px-5 select-none">
+    <div className="min-h-[calc(100dvh-80px)] w-full flex flex-col items-center pt-10 md:pt-24 pb-12 px-4 sm:px-5 select-none">
       
       {/* 1. TOP RIGHT STREAK WIDGET */}
       <div className="streak-widget-container group fixed top-6 right-6 w-36 h-14 z-[90] cursor-pointer hidden md:block">
@@ -146,9 +146,9 @@ const Dashboard: React.FC<DashboardProps> = ({ liveStatus, historyRecords, onNav
       <div className="w-full max-w-[500px] flex flex-col items-center mt-6">
         
         {/* Streak glow indicator bar */}
-        <div className="relative w-full max-w-[340px] h-[72px] mb-8 rounded-2xl bg-gradient-to-r from-slate-900 via-slate-950 to-slate-900 border border-white/10 shadow-xl overflow-hidden">
+        <div className="relative w-full max-w-[380px] mb-8 rounded-3xl bg-gradient-to-r from-slate-900 via-slate-950 to-slate-900 border border-white/10 shadow-xl p-5 flex flex-col gap-4">
           <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-cyan-400 to-indigo-500 opacity-30" />
-          <div className="flex justify-between items-center h-full px-6 relative z-10">
+          <div className="flex justify-between items-center relative z-10">
             <div className="text-left">
               <span className="text-[10px] text-neutral-500 uppercase tracking-widest font-mono">Today's Streak</span>
               <div className="text-xl font-extrabold text-amber-400 font-display uppercase tracking-wide drop-shadow-[0_0_8px_rgba(245,158,11,0.3)]">
@@ -157,7 +157,7 @@ const Dashboard: React.FC<DashboardProps> = ({ liveStatus, historyRecords, onNav
             </div>
             
             {/* Animated fire widget inside card */}
-            <div className="w-14 h-14 relative flex items-center justify-center">
+            <div className="w-12 h-12 relative flex items-center justify-center">
               <div
                 className="w-full h-full bg-contain bg-center bg-no-repeat scale-110"
                 style={{ backgroundImage: `url(${fireRedUrl})` }}
@@ -168,6 +168,11 @@ const Dashboard: React.FC<DashboardProps> = ({ liveStatus, historyRecords, onNav
                 />
               </div>
             </div>
+          </div>
+
+          {/* Weekday Streak Circles (Visible directly on all devices!) */}
+          <div className="flex justify-between border-t border-white/5 pt-4">
+            {weekdayCircles()}
           </div>
         </div>
 

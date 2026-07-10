@@ -15,7 +15,7 @@ const History: React.FC<HistoryProps> = ({ historyRecords, onSelectDate }) => {
   const filteredRecords = historyRecords.filter(r => r.date.includes(searchQuery));
 
   return (
-    <div className="min-h-[calc(100vh-80px)] w-full flex flex-col items-center pt-20 pb-12 px-5">
+    <div className="min-h-[calc(100dvh-80px)] w-full flex flex-col items-center pt-20 pb-12 px-5">
       <div className="w-full max-w-[850px]">
         
         {/* Title */}
@@ -86,7 +86,8 @@ const History: React.FC<HistoryProps> = ({ historyRecords, onSelectDate }) => {
                           {formatMsToHrsMinsSecs(record.totalTimeMs)}
                         </span>
                         <span className="text-[10px] font-mono text-neutral-500 group-hover:text-red-400 transition-colors">
-                          {isExpanded ? 'TAP TO COLLAPSE ▴' : 'TAP TO EXPLAIN ▾'}
+                          <span className="hidden sm:inline">{isExpanded ? 'TAP TO COLLAPSE ' : 'TAP TO EXPLAIN '}</span>
+                          {isExpanded ? '▴' : '▾'}
                         </span>
                       </div>
                     </div>

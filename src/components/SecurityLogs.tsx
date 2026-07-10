@@ -35,7 +35,7 @@ const SecurityLogs: React.FC<SecurityLogsProps> = ({ violations, onRefresh }) =>
   };
 
   return (
-    <div className="min-h-[calc(100vh-80px)] w-full flex flex-col items-center pt-20 pb-12 px-5">
+    <div className="min-h-[calc(100dvh-80px)] w-full flex flex-col items-center pt-20 pb-12 px-5">
       <div className="w-full max-w-[800px]">
         
         {/* Title */}

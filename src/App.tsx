@@ -202,12 +202,12 @@ const App: React.FC = () => {
   // Google Authentication Overlay Page
   if (!user) {
     return (
-      <div className="min-h-screen bg-[#080a11] flex items-center justify-center px-4 relative overflow-hidden">
+      <div className="min-h-screen min-h-dvh bg-[#080a11] flex items-center justify-center px-4 relative overflow-hidden">
         {/* Glow Effects */}
         <div className="absolute top-1/4 left-1/4 w-[300px] h-[300px] bg-red-500/10 rounded-full blur-[100px]" />
         <div className="absolute bottom-1/4 right-1/4 w-[300px] h-[300px] bg-indigo-500/10 rounded-full blur-[100px]" />
 
-        <div className="w-full max-w-[420px] bg-slate-950/60 border border-white/10 rounded-3xl p-8 shadow-2xl backdrop-blur-xl relative motionsite-card-shine text-center">
+        <div className="w-full max-w-[420px] bg-slate-950/60 border border-white/10 rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-xl relative motionsite-card-shine text-center">
           <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-red-500 to-transparent blur-[1px]" />
           
           <div className="w-16 h-16 rounded-2xl bg-red-500/10 border border-red-500/25 flex items-center justify-center text-red-500 mx-auto mb-6">
@@ -247,7 +247,7 @@ const App: React.FC = () => {
 
   // Parents Dashboard Content Layout
   return (
-    <div className="min-h-screen bg-[#080a11] text-white flex">
+    <div className="min-h-screen min-h-dvh bg-[#080a11] text-white flex">
       {/* Sidebar Navigation */}
       <Sidebar
         currentTab={currentTab}
@@ -261,7 +261,7 @@ const App: React.FC = () => {
       />
 
       {/* Main Page Area */}
-      <main className="flex-1 min-h-screen ml-0 md:ml-[90px] pt-16 md:pt-0 pb-16 md:pb-0 relative">
+      <main className="flex-1 min-h-screen min-h-dvh ml-0 md:ml-[90px] pt-[calc(4rem+env(safe-area-inset-top))] md:pt-0 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0 relative">
         {currentTab === 'dashboard' && (
           <Dashboard
             liveStatus={computedLiveStatus}
