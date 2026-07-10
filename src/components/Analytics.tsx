@@ -17,6 +17,17 @@ const Analytics: React.FC<AnalyticsProps> = ({ selectedDate, setSelectedDate, hi
   const todayStr = new Date().toLocaleDateString();
   const targetDateStr = selectedDate || todayStr;
 
+  // Recess privacy window checker (8:00 PM to 9:30 PM)
+  const isFreeTimeNow = () => {
+    if (selectedDate) return false; // For past dates, show full logs
+    const now = new Date();
+    const hours = now.getHours();
+    const mins = now.getMinutes();
+    const totalMins = (hours * 60) + mins;
+    return totalMins >= 1200 && totalMins <= 1290;
+  };
+  const isFree = isFreeTimeNow();
+
   // Determine what numbers to render (Live vs Historical)
   let physicsTime = 0;
   let chemistryTime = 0;
@@ -240,24 +251,34 @@ const Analytics: React.FC<AnalyticsProps> = ({ selectedDate, setSelectedDate, hi
 
           {/* Platform Summaries */}
           <div className="flex gap-4 mb-8 overflow-x-auto pb-2 scrollbar-thin">
-            {Object.entries(platformTotals).map(([plat, ms]) => {
-              if (ms === 0) return null;
-              const colorTag = getPlatformColors(plat);
-              return (
-                <div
-                  key={plat}
-                  className={`border py-3 px-5 rounded-2xl min-w-[150px] text-center flex flex-col gap-1 backdrop-blur-md ${colorTag}`}
-                >
-                  <span className="text-[10px] uppercase tracking-widest font-mono font-bold">{plat}</span>
-                  <strong className="text-xl font-bold font-mono">{formatMsToHrsMinsSecs(ms)}</strong>
-                </div>
-              );
-            })}
+            {isFree ? (
+              <div className="text-center py-6 text-xs font-mono font-bold text-cyan-400 border border-cyan-500/25 bg-cyan-950/20 rounded-2xl w-full select-none tracking-wide">
+                🏖️ RECESS WINDOW ACTIVE (8:00 PM - 9:30 PM) — Activity breakdowns are hidden for student privacy.
+              </div>
+            ) : (
+              Object.entries(platformTotals).map(([plat, ms]) => {
+                if (ms === 0) return null;
+                const colorTag = getPlatformColors(plat);
+                return (
+                  <div
+                    key={plat}
+                    className={`border py-3 px-5 rounded-2xl min-w-[150px] text-center flex flex-col gap-1 backdrop-blur-md ${colorTag}`}
+                  >
+                    <span className="text-[10px] uppercase tracking-widest font-mono font-bold">{plat}</span>
+                    <strong className="text-xl font-bold font-mono">{formatMsToHrsMinsSecs(ms)}</strong>
+                  </div>
+                );
+              })
+            )}
           </div>
 
           {/* Detailed entries list */}
           <div className="flex flex-col gap-3.5 max-h-[350px] overflow-y-auto pr-1.5 scrollbar-thin">
-            {sortedEntries.length === 0 ? (
+            {isFree ? (
+              <div className="text-neutral-500 text-center py-12 font-mono text-xs border border-dashed border-white/5 rounded-2xl bg-black/10 select-none">
+                🔒 Detailed screen time activity list is private during daily free time.
+              </div>
+            ) : sortedEntries.length === 0 ? (
               <div className="text-neutral-500 text-center py-12 font-mono text-xs border border-dashed border-white/5 rounded-2xl bg-black/10">
                 No active screen time logs recorded for this date.
               </div>
@@ -300,7 +321,11 @@ const Analytics: React.FC<AnalyticsProps> = ({ selectedDate, setSelectedDate, hi
           </h3>
 
           <div className="flex flex-col gap-3.5 max-h-[350px] overflow-y-auto pr-1.5 scrollbar-thin">
-            {loadingDistractions ? (
+            {isFree ? (
+              <div className="text-neutral-500 text-center py-12 font-mono text-xs border border-dashed border-white/5 rounded-2xl bg-black/10 select-none">
+                🔒 Live browser navigation logs are private during daily free time (8:00 PM - 9:30 PM).
+              </div>
+            ) : loadingDistractions ? (
               <div className="text-red-400 text-center py-12 font-mono text-xs">
                 Fetching browser history audit logs... ⏳
               </div>

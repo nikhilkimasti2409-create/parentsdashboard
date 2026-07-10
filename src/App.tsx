@@ -24,7 +24,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
-const ALLOWED_EMAILS = ["dimplerjoshi2409@gmail.com", "tjangir2010@gmail.com", "nikhilkimasti2409@gmail.com"];
+const ALLOWED_EMAILS = ["dimplerjoshi2409@gmail.com", "tjangir2010@gmail.com", "kkrishnarjoshi0509@gmail.com", "nikhilkimasti2409@gmail.com"];
 
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -179,6 +179,7 @@ const App: React.FC = () => {
         }}
         onLogout={handleSignOut}
         userEmail={user.email}
+        extensionActive={liveStatus.extensionActive}
       />
 
       {/* Main Page Area */}

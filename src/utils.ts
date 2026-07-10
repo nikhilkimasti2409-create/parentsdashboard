@@ -10,6 +10,7 @@ export interface LiveStatusData {
   isStudying: string;
   screenTimeData: Record<string, { time: number; url: string; notes?: string }>;
   tasks: Array<{ text: string; completed: boolean }>;
+  extensionActive?: string;
 }
 
 export interface HistoryRecord {
@@ -89,7 +90,8 @@ export async function fetchLiveStatus(): Promise<LiveStatusData> {
     streak: parseInt(fields.streak?.integerValue || "0"),
     isStudying: fields.isStudying?.stringValue || "None",
     screenTimeData,
-    tasks
+    tasks,
+    extensionActive: fields.extensionActive?.stringValue || "disabled"
   };
 }
 

@@ -205,10 +205,16 @@ const Dashboard: React.FC<DashboardProps> = ({ liveStatus, historyRecords, onNav
           <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-20" />
           <div className="flex items-center justify-between border-b border-white/5 pb-2.5">
             <span className="text-[10px] text-neutral-500 tracking-wider uppercase font-mono">Current Live Session</span>
-            <span className="flex items-center gap-1 font-mono text-[10px] font-bold text-cyan-400 bg-cyan-400/5 px-2 py-0.5 rounded-full border border-cyan-400/10">
-              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping" />
-              ONLINE
-            </span>
+            <div className="flex items-center gap-2">
+              <span className={`flex items-center gap-1 font-mono text-[10px] font-bold ${liveStatus.extensionActive === 'running' ? 'text-emerald-400 bg-emerald-400/5 border-emerald-400/10' : 'text-rose-400 bg-rose-400/5 border-rose-400/10 animate-pulse'} px-2 py-0.5 rounded-full border`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${liveStatus.extensionActive === 'running' ? 'bg-emerald-500' : 'bg-rose-500 animate-ping'}`} />
+                SHIELD: {liveStatus.extensionActive === 'running' ? 'RUNNING' : 'DISABLED'}
+              </span>
+              <span className="flex items-center gap-1 font-mono text-[10px] font-bold text-cyan-400 bg-cyan-400/5 px-2 py-0.5 rounded-full border border-cyan-400/10">
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping" />
+                ONLINE
+              </span>
+            </div>
           </div>
           <div className="flex flex-col gap-1 text-left">
             <span className="text-xs text-neutral-400 font-mono">Current Focus Activity:</span>

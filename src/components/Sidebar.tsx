@@ -6,9 +6,10 @@ interface SidebarProps {
   setCurrentTab: (tab: string) => void;
   onLogout: () => void;
   userEmail: string | null;
+  extensionActive?: string;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ currentTab, setCurrentTab, onLogout, userEmail }) => {
+const Sidebar: React.FC<SidebarProps> = ({ currentTab, setCurrentTab, onLogout, userEmail, extensionActive }) => {
   const menuItems = [
     { id: 'dashboard', label: 'Overview', icon: Home },
     { id: 'tasks', label: 'Tasks (Read)', icon: CheckSquare },
@@ -65,6 +66,14 @@ const Sidebar: React.FC<SidebarProps> = ({ currentTab, setCurrentTab, onLogout, 
 
       {/* Footer / Logout */}
       <div className="mt-auto w-full px-1 flex flex-col gap-3">
+        <div className="px-2 flex flex-col items-center group-hover:items-start transition-all gap-1 border-b border-white/5 pb-3 mb-1">
+          <div className="flex items-center gap-2 font-mono">
+            <span className={`w-2 h-2 rounded-full ${extensionActive === 'running' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse' : 'bg-rose-500 shadow-[0_0_8px_rgba(239,68,68,0.5)] animate-ping'}`} />
+            <span className={`text-[10px] tracking-wider uppercase font-bold hidden group-hover:inline transition-all duration-300 ${extensionActive === 'running' ? 'text-emerald-400' : 'text-rose-500 animate-pulse'}`}>
+              {extensionActive === 'running' ? 'SHIELD ACTIVE' : 'SHIELD DISABLED'}
+            </span>
+          </div>
+        </div>
         {userEmail && (
           <div className="px-2 text-left truncate hidden group-hover:block transition-all duration-300">
             <span className="text-[10px] text-neutral-500 font-mono block">Logged In as:</span>
